@@ -9,11 +9,18 @@ import com.nishanth.ecommerce.exception.CategoryNotFoundException;
 import com.nishanth.ecommerce.exception.ProductNotFoundException;
 import com.nishanth.ecommerce.repository.CategoryRepository;
 import com.nishanth.ecommerce.repository.ProductRepository;
+import com.nishanth.ecommerce.repository.ProductSpecification;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 @Service
 public class ProductService {
 
@@ -59,6 +66,7 @@ public class ProductService {
     // =========================
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "products", key = "#id")
     public ProductResponse getProductById(Long id) {
 
         Product product = productRepository.findById(id)
@@ -77,50 +85,37 @@ public class ProductService {
     public Page<ProductResponse> getProducts(
             String search,
             Long categoryId,
-            Pageable pageable) {
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            ProductStatus status,
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    ) {
 
-        Page<Product> products;
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
 
-        boolean hasSearch =
-                search != null && !search.trim().isEmpty();
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                sort
+        );
 
-        boolean hasCategory =
-                categoryId != null;
+        Specification<Product> specification =
+                ProductSpecification.filterProducts(
+                        search,
+                        categoryId,
+                        minPrice,
+                        maxPrice,
+                        status
+                );
 
-        if (hasSearch && hasCategory) {
-
-            products =
-                    productRepository
-                            .findByNameContainingIgnoreCaseAndCategoryId(
-                                    search.trim(),
-                                    categoryId,
-                                    pageable
-                            );
-
-        } else if (hasSearch) {
-
-            products =
-                    productRepository
-                            .findByNameContainingIgnoreCase(
-                                    search.trim(),
-                                    pageable
-                            );
-
-        } else if (hasCategory) {
-
-            products =
-                    productRepository.findByCategoryId(
-                            categoryId,
-                            pageable
-                    );
-
-        } else {
-
-            products =
-                    productRepository.findAll(pageable);
-        }
-
-        return products.map(this::convertToResponse);
+        return productRepository
+                .findAll(specification, pageable)
+                .map(this::convertToResponse);
     }
 
     // =========================
@@ -128,6 +123,7 @@ public class ProductService {
     // =========================
 
     @Transactional
+    @CacheEvict(value = "products", key = "#id")
     public ProductResponse updateProduct(
             Long id,
             ProductRequest request) {
@@ -161,6 +157,7 @@ public class ProductService {
     // =========================
 
     @Transactional
+    @CacheEvict(value = "products", key = "#id")
     public ProductResponse deactivateProduct(Long id) {
 
         Product product = productRepository.findById(id)

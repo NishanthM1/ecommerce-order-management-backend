@@ -4,6 +4,7 @@ import com.nishanth.ecommerce.dto.CategoryRequest;
 import com.nishanth.ecommerce.entity.Category;
 import com.nishanth.ecommerce.entity.CategoryStatus;
 import com.nishanth.ecommerce.exception.CategoryAlreadyExistsException;
+import com.nishanth.ecommerce.exception.CategoryNotFoundException;
 import com.nishanth.ecommerce.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 
@@ -43,15 +44,14 @@ public class CategoryService {
     public Category getCategoryById(Long id) {
 
         return categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
+                .orElseThrow(() -> new CategoryNotFoundException("Category not found with id: " + id));
     }
 
     // Update category
     public Category updateCategory(Long id, CategoryRequest request) {
 
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Category not found with id: " + id));
+                .orElseThrow(() ->new CategoryNotFoundException("Category not found with id: " + id));
 
         if (!category.getName().equals(request.getName())
                 && categoryRepository.existsByName(request.getName())) {
@@ -69,8 +69,7 @@ public class CategoryService {
     public Category deactivateCategory(Long id) {
 
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Category not found with id: " + id));
+                .orElseThrow(() ->new CategoryNotFoundException("Category not found with id: " + id));
 
         category.setStatus(CategoryStatus.INACTIVE);
 

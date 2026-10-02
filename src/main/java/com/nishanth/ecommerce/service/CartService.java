@@ -133,9 +133,9 @@ public class CartService {
 
             if (newQuantity > product.getStockQuantity()) {
 
-                throw new RuntimeException(
-                        "Insufficient stock. Available stock: "
-                                + product.getStockQuantity());
+                throw new InvalidStockException(
+                        "Insufficient stock. Available stock: " + product.getStockQuantity()
+                );
             }
 
             cartItem.setQuantity(newQuantity);
@@ -170,12 +170,12 @@ public class CartService {
 
         if (product.getStatus() != ProductStatus.ACTIVE) {
 
-            throw new RuntimeException("Product is currently inactive");
+            throw new ProductInactiveException("Product is currently inactive");
         }
 
         if (quantity > product.getStockQuantity()) {
 
-            throw new RuntimeException("Insufficient stock. Available stock: " + product.getStockQuantity());
+            throw new InvalidStockException("Insufficient stock. Available stock: " + product.getStockQuantity());
         }
 
         cartItem.setQuantity(quantity);

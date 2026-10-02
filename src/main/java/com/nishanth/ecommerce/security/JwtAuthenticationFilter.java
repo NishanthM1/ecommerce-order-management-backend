@@ -32,39 +32,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // No Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Extract JWT
         String token = authHeader.substring(7);
 
-        // Extract information from JWT
-        String email = jwtService.extractEmail(token);
-        String role = jwtService.extractRole(token);
-
-        // Set authentication if user is not already authenticated
-        if (email != null &&
-                SecurityContextHolder.getContext().getAuthentication() == null) {
+        try {
+            String email = jwtService.extractEmail(token);
+            String role = jwtService.extractRole(token);
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             email,
                             null,
                             List.of(
-                                    new SimpleGrantedAuthority(
-                                            "ROLE_" + role
-                                    )
+                                    new SimpleGrantedAuthority("ROLE_" + role)
                             )
                     );
 
             SecurityContextHolder
                     .getContext()
                     .setAuthentication(authentication);
+
+        } catch (Exception ex) {
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+
+            response.getWriter().write("""
+        {
+            "status": 401,
+            "message": "Invalid or expired token"
+        }
+        """);
+
+            return;
         }
 
+        // IMPORTANT: outside the try/catch
         filterChain.doFilter(request, response);
     }
 }

@@ -7,7 +7,8 @@ import com.nishanth.ecommerce.exception.ProductNotFoundException;
 import com.nishanth.ecommerce.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.nishanth.ecommerce.exception.InvalidStockException;
+import java.util.List;
 @Service
 public class InventoryService {
 
@@ -57,5 +58,50 @@ public class InventoryService {
                 product.getVersion(),
                 product.getStatus()
         );
+    }
+    public List<InventoryResponse> getLowStockProducts(Integer threshold) {
+
+        if (threshold < 0) {
+            throw new InvalidStockException("Stock threshold cannot be negative");
+        }
+
+        return productRepository
+                .findByStockQuantityLessThanEqual(threshold)
+                .stream()
+                .map(this::convertToResponse)
+                .toList();
+    }
+    @Transactional
+    public void decreaseStock(Product product, int quantity) {
+
+        if (quantity <= 0) {
+            throw new InvalidStockException("Quantity must be greater than 0");
+        }
+
+        if (product.getStockQuantity() < quantity) {
+            throw new InvalidStockException(
+                    "Insufficient stock. Available stock: "
+                            + product.getStockQuantity()
+            );
+        }
+
+        product.setStockQuantity(
+                product.getStockQuantity() - quantity
+        );
+
+        productRepository.save(product);
+    }
+    @Transactional
+    public void increaseStock(Product product, int quantity) {
+
+        if (quantity <= 0) {
+            throw new InvalidStockException("Quantity must be greater than 0");
+        }
+
+        product.setStockQuantity(
+                product.getStockQuantity() + quantity
+        );
+
+        productRepository.save(product);
     }
 }

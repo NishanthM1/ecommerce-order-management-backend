@@ -3,7 +3,11 @@
 A production-style REST API backend for an e-commerce application built with **Java, Spring Boot, Spring Security, PostgreSQL, Spring Data JPA, and JWT authentication**.
 
 The project implements core e-commerce backend functionality including user authentication, role-based authorization, category and product management, shopping cart management, order processing, simulated payments, and inventory management.
-
+##  📚Swagger/OpenAPI
+    - All APIs Document
+    - Interactive API testing
+    - run and test in
+- http://localhost:8080/swagger-ui/index.html
 ---
 
 ## 📌 Project Overview

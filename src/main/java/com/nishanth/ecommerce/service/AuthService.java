@@ -6,6 +6,7 @@ import com.nishanth.ecommerce.dto.RegisterRequest;
 import com.nishanth.ecommerce.entity.Role;
 import com.nishanth.ecommerce.entity.User;
 import com.nishanth.ecommerce.exception.EmailAlreadyExistsException;
+import com.nishanth.ecommerce.exception.InvalidPasswordException;
 import com.nishanth.ecommerce.repository.UserRepository;
 import com.nishanth.ecommerce.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -51,14 +52,14 @@ public class AuthService {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() ->
-                        new RuntimeException("Invalid email or password")
+                 new InvalidPasswordException("Invalid email or password")
                 );
 
         if (!passwordEncoder.matches(
                 request.getPassword(),
                 user.getPassword())) {
 
-            throw new RuntimeException("Invalid email or password");
+            throw new InvalidPasswordException("Invalid email or password");
         }
 
         String token = jwtService.generateToken(

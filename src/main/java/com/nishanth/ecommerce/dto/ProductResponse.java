@@ -1,12 +1,17 @@
 package com.nishanth.ecommerce.dto;
 
 import com.nishanth.ecommerce.entity.ProductStatus;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Setter;
+
 
 import java.math.BigDecimal;
 
 @Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 public class ProductResponse {
 
@@ -16,7 +21,6 @@ public class ProductResponse {
     private BigDecimal price;
     private Integer stockQuantity;
     private ProductStatus status;
-
     private Long categoryId;
     private String categoryName;
 }

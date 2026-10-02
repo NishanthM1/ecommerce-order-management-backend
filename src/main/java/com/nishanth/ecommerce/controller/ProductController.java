@@ -2,16 +2,16 @@ package com.nishanth.ecommerce.controller;
 
 import com.nishanth.ecommerce.dto.ProductRequest;
 import com.nishanth.ecommerce.dto.ProductResponse;
+import com.nishanth.ecommerce.entity.ProductStatus;
 import com.nishanth.ecommerce.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/products")
@@ -55,7 +55,7 @@ public class ProductController {
     }
 
     // =========================
-    // GET / SEARCH / FILTER
+    // SEARCH / FILTER PRODUCTS
     // =========================
 
     @GetMapping
@@ -66,6 +66,15 @@ public class ProductController {
 
             @RequestParam(required = false)
             Long categoryId,
+
+            @RequestParam(required = false)
+            BigDecimal minPrice,
+
+            @RequestParam(required = false)
+            BigDecimal maxPrice,
+
+            @RequestParam(required = false)
+            ProductStatus status,
 
             @RequestParam(defaultValue = "0")
             int page,
@@ -79,25 +88,17 @@ public class ProductController {
             @RequestParam(defaultValue = "asc")
             String direction) {
 
-        Sort sort;
-
-        if (direction.equalsIgnoreCase("desc")) {
-
-            sort = Sort.by(sortBy).descending();
-
-        } else {
-
-            sort = Sort.by(sortBy).ascending();
-        }
-
-        Pageable pageable =
-                PageRequest.of(page, size, sort);
-
         Page<ProductResponse> products =
                 productService.getProducts(
                         search,
                         categoryId,
-                        pageable
+                        minPrice,
+                        maxPrice,
+                        status,
+                        page,
+                        size,
+                        sortBy,
+                        direction
                 );
 
         return ResponseEntity.ok(products);

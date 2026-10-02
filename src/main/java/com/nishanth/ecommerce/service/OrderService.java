@@ -24,6 +24,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final PaymentRepository paymentRepository;
+    private final InventoryService inventoryService;
 
     public OrderService(
             OrderRepository orderRepository,
@@ -32,7 +33,8 @@ public class OrderService {
             CartItemRepository cartItemRepository,
             ProductRepository productRepository,
             UserRepository userRepository,
-            PaymentRepository paymentRepository) {
+            PaymentRepository paymentRepository,
+            InventoryService inventoryService) {
 
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
@@ -41,6 +43,7 @@ public class OrderService {
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.paymentRepository = paymentRepository;
+        this.inventoryService = inventoryService;
     }
 
     // ==========================================
@@ -116,9 +119,9 @@ public class OrderService {
             totalAmount = totalAmount.add(subtotal);
 
             // Reduce stock
-            product.setStockQuantity(
-                    product.getStockQuantity()
-                            - cartItem.getQuantity()
+            inventoryService.decreaseStock(
+                    product,
+                    cartItem.getQuantity()
             );
 
             productRepository.save(product);
@@ -158,8 +161,7 @@ public class OrderService {
             Pageable pageable) {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                .orElseThrow(() ->new UserNotFoundException("User not found"));
 
         Page<Order> orders =
                 orderRepository.findByUserId(
@@ -180,8 +182,7 @@ public class OrderService {
             String email) {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                .orElseThrow(() ->new UserNotFoundException("User not found"));
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() ->
@@ -249,8 +250,7 @@ public class OrderService {
             String email) {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                .orElseThrow(() ->new UserNotFoundException("User not found"));
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() ->
@@ -276,11 +276,10 @@ public class OrderService {
 
             Product product = item.getProduct();
 
-            product.setStockQuantity(
-                    product.getStockQuantity()
-                            + item.getQuantity()
+            inventoryService.increaseStock(
+                    product,
+                    item.getQuantity()
             );
-
             productRepository.save(product);
         }
 
